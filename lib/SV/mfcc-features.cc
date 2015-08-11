@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <iostream>
 #include <iterator>
+#include <vector>
 
 #include <aquila/aquila.h>
 
@@ -18,7 +19,7 @@ int main(int argc, char *argv[])
     constexpr size_t frame_overlap = 512;
 
     if (argc < 2) {
-        ming::println("You should add an .wav");
+        puts("You should add an .wav");
         return 1;
     }
     WaveFile wave(argv[1]);
@@ -36,9 +37,9 @@ int main(int argc, char *argv[])
     }
 
     for (auto&& i : res) {
-		for (auto j : i)
-			std::cout << j << " ";
-		std::cout << "\n";
-	}
+	for (auto j : i)
+		std::cout << j << " ";
+	std::cout << "\n";
+    }
     return 0;
 }
