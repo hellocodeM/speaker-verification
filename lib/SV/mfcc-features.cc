@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
         features.emplace_back(mfcc.calculate(sig));
     }
 
-    for (auto&& i : res) {
+    for (auto&& i : features) {
 	for (auto j : i)
 		std::cout << j << " ";
 	std::cout << "\n";
