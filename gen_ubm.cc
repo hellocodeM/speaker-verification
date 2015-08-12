@@ -14,9 +14,10 @@ int main(int argc, char **argv) {
 	ubm.set_num_gsm(atoi(argv[3]));
 	
 	if(ubm.read_data(filename)==0) {
-		cerr << "File not exists!" << endl;
+		cerr << "Data file not exists!" << endl;
 		return 0;
 	}
+
 	srand((int)time(0));
 	ubm.Init();
 	ubm.Kmeans();
