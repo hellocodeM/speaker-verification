@@ -152,6 +152,9 @@ void UBM::save_to_file() {
 	}
 	out << endl;
 	out.close();
+	
+	cout << "The model has been saved in: " << model_id << endl;
+	return;
 }
 
 void UBM::set_model_id(string x) {

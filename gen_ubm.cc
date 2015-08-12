@@ -23,5 +23,6 @@ int main(int argc, char **argv) {
 	ubm.EM();
 	
 	ubm.save_to_file();
+	
 	return 0;
 }
