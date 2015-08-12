@@ -434,6 +434,7 @@ double UBM::cal_gsm(int gsm_id, vector<double> &data) {
 	sum = exp(-0.5*sum);
 	product = 1.0/product;
 	output = 1.0/pow(two_pi,(double)dim/2.0)*product*sum;
+	if(output == 0) return DBL_MIN;
 	return output;
 }
 
@@ -525,7 +526,7 @@ int UBM::read_personal_data(string filename) {
 		cerr << "Personal data file not exist!" << endl;
 		return 1;
 	}
-	
+	model_id = "model_"+filename;
 	vector<double> temp;
 	double t;
 	while(in >> t) {
@@ -534,7 +535,8 @@ int UBM::read_personal_data(string filename) {
 			in >> t;
 			temp.push_back(t);
 		}
-		personal_data.push_back(temp);
+		if(temp[0] != 0) 
+			personal_data.push_back(temp);
 		temp.clear();
 	}
 	in.close();	
@@ -599,6 +601,6 @@ double UBM::get_point(vector<vector<double>> &test) {
 		}
 		ans += temp;
 	}
-	return ans/test.size();
+	return ans/test.size(); 
 };
 //============================ end get point ==============================//
