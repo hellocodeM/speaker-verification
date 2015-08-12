@@ -22,5 +22,6 @@ int main(int argc, char **argv) {
 	ubm.Kmeans();
 	ubm.EM();
 	
+	ubm.save_to_file();
 	return 0;
 }

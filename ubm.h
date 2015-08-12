@@ -5,6 +5,7 @@
 #include <fstream>
 #include <ctime>
 #include <cfloat>
+#include <string>
 #define random(x) (rand()%x)
 #define INF 1e+32
 using namespace std;
@@ -20,13 +21,16 @@ struct GSM {
 
 class UBM {
 private:
-	static int dim;				//dimension of features
-	static int num_GSM;    		//the number of GSM
+	int dim;
+	int num_GSM;
+	//	static int dim;				//dimension of features
+//	static int num_GSM;    		//the number of GSM
 	static const int num_data = 2000000;
 	static const int max_iter = 1000;       //the maximun number of iterations of K-means
 	static const double threshold;   		//the threshold of K-means
 	static const double threshold_EM;		//the threshold of EM
 
+	string model_id;
 	vector<GSM> gsm;
 	vector<vector<double>> data;
 	vector<vector<double>> pr;
@@ -49,24 +53,23 @@ private:
 	void E_step();
 	double M_step();
 	
-	void show_weight();
-	void show_mean();
-	void show_var();
-	void show_tol_num();
 
 public:
-	UBM() {};
+	UBM() {
+		dim = 12;
+		num_GSM = 100;
+		model_id = "model_0";
+	};
 	int read_data(string);
 	void init();
 	void Init();
 	void Kmeans();
 	void EM();
-	static void set_dim(int);
-	static void set_num_gsm(int);
-	static int get_dim();
-	static int get_num_gsm();
+	void set_dim(int);
+    void set_num_gsm(int);
+	int get_dim();
+	int get_num_gsm();
 
-	int model_id;
 	int read_personal_data(string);
 	void self_adaption();
 
@@ -74,12 +77,86 @@ public:
 	vector<vector<double>> get_data() {
 		return personal_data;	
 	} 
+
+	void set_model_id(string);
+	void save_to_file();
+	int recover_from_file(string);
+	
+	void show_weight();
+	void show_mean();
+	void show_var();
+	void show_tol_num();
 };
 
-int UBM::num_GSM = 100;
-int UBM::dim = 12;
+//int UBM::num_GSM = 100;
+//int UBM::dim = 12;
 const double UBM::threshold = 0.0001;
 const double UBM::threshold_EM = 0.0005;
+
+//============================ general function ============================//
+int UBM::recover_from_file(string filename) {
+	ifstream in(filename);
+	if(!in) {
+		cerr << "File not exists!" << endl;
+		return 0;
+	}
+	int temp;
+	in >> temp;
+	dim = temp;
+
+	in >> temp;
+	num_GSM = temp;
+
+	gsm.resize(num_GSM);
+	for(int i=0; i<num_GSM; i++) {
+		in >> gsm[i].weight;
+		gsm[i].mean.resize(dim);
+		gsm[i].var.resize(dim);
+	}
+
+	for(int i=0; i<num_GSM; i++) {
+		for(int j=0; j<dim; j++) {
+			in >> gsm[i].mean[j];
+		}
+	}
+
+	for(int i=0; i<num_GSM; i++) {
+		for(int j=0; j<dim; j++) {
+			in >> gsm[i].var[j];
+		}
+	}
+	in.close();
+	cout << "Recovery is success!" << endl;
+	return 1;
+}
+
+void UBM::save_to_file() {
+	ofstream out(model_id);
+	out << dim << " " << num_GSM << '\n';	//save dim and num_GSM in the 1st line
+	
+	for(int i=0; i<num_GSM; i++)			//save weight
+		out << gsm[i].weight << '\n';
+
+	for(int i=0; i<num_GSM; i++) {			//save mean
+		for(int j=0; j<dim; j++) {
+			out << gsm[i].mean[j] << " ";
+		}
+		out << '\n';
+	}
+	
+	for(int i=0; i<num_GSM; i++) {			//save var
+		for(int j=0; j<dim; j++) {
+			out << gsm[i].var[j] << " ";
+		}
+		out << '\n';
+	}
+	out << endl;
+	out.close();
+}
+
+void UBM::set_model_id(string x) {
+	model_id = x;
+}
 
 void UBM::set_dim(int x) {
 	dim = x;
@@ -97,7 +174,6 @@ int UBM::get_num_gsm() {
 	return num_GSM;
 }
 
-//============================ general function ============================//
 void UBM::show_weight() {
 	cout << "The weights are below:" << endl;	
 	for(int i=0; i<num_GSM; i++) {
@@ -141,6 +217,7 @@ void UBM::show_tol_num() {
 
 //================================== read data =========================================//
 int UBM::read_data(string filename) {
+	model_id = "model_"+filename;
 	ifstream in(filename);
 	data.reserve(num_data);	
 	if(!in) {
