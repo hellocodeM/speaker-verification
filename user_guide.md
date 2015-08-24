@@ -8,3 +8,6 @@ We provide interfaces to save your models into files along with recover your mod
 
 ##3. Do some test
 You can use some features to compute scores on your model. A threshold depends on your data.
+
+
+**Don't forget to watch the file ubm.h to learn more about it!**
