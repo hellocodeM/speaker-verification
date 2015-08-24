@@ -21,77 +21,73 @@ struct GSM {
 
 class UBM {
 private:
-	int dim;
-	int num_GSM;
-	//	static int dim;				//dimension of features
-//	static int num_GSM;    		//the number of GSM
-	static const int num_data = 2000000;
-	static const int max_iter = 1000;       //the maximun number of iterations of K-means
-	static const double threshold;   		//the threshold of K-means
-	static const double threshold_EM;		//the threshold of EM
+	int dim;								// dimension of features
+   	int num_GSM;							// the number of GSM
+	string model_id;						// the id of this model
+	double normal_mean;						// the mean used for score normalization
+	double normal_var;						// the varience used for score normalization
+	static const int num_data = 2000000;	// use to reserve vector
+	static const int max_iter = 1000;       // the maximun number of iterations of K-means
+	static const double threshold;   		// the threshold of K-means
+	static const double threshold_EM;		// the threshold of EM
 
-	string model_id;
-	vector<GSM> gsm;
-	vector<vector<double>> data;
-	vector<vector<double>> pr;
+	vector<GSM> gsm;						// to store gaussian single model
+	vector<vector<double>> data;			// to store training data for ubm
+	vector<vector<double>> pr;				// to store posterior probability pr[model_id | data_id]
+//const double perturb = 0.001;
 
-	vector<vector<double>> personal_data;
-	vector<vector<double>> personal_pr;
-	vector<double> n;
-	vector<vector<double>> Ex;
+	vector<vector<double>> personal_data;	// to store training data for personal gmm
+	vector<vector<double>> personal_pr;		// to store posterior probability pr[model_id | personal_data_id] 
+	vector<double> n;						// the mixed weighted value
+	vector<vector<double>> Ex;				// the mean value vector
 
-	void recluster();
+	void recluster();						// k-means recluster
 //	int check_badcell();
 //	void adjust_badmean();
-	double update_mean();
-	void update_var();
-	void update_weight();
-	double distance(int, int);
-	double distance_p(int, int);
-	int find_closest(int);
-	double cal_gsm(int, vector<double>&);
-	void E_step();
-	double M_step();
+	double update_mean();					// k-means update mean vector
+	void update_var();						// k-means update varience vector
+	void update_weight();					// k-means update weight vector
+	double distance(int, int);				// k-means calculate the distance between two vectors
+	double distance_p(int, int);			// k-means++ calculate the distance between two vectors 
+	int find_closest(int);					// k-means find closest center
+	double cal_gsm(int, vector<double>&);	// to compute the gaussian score on one model
+	void E_step();							// EM Algorithm -> E step
+	double M_step();						// EM Algorithm -> M step, return total changes
 	
 
 public:
-	UBM() {
-		dim = 12;
-		num_GSM = 100;
-		model_id = "model_0";
-	};
-	int read_data(string);
-	void init();
-	void Init();
-	void Kmeans();
-	void EM();
-	void set_dim(int);
-    void set_num_gsm(int);
-	int get_dim();
-	int get_num_gsm();
+	UBM() : dim(12), num_GSM(100), model_id("model_0"), normal_mean(0), normal_var(0) {};
+	int read_data(string);					// read traing data, store in vector "data"
+	void Init();							// use k-means++ to initialize the center of each cluster
+	void Kmeans();							// k-means cluster
+	void EM();								// EM Algorithm
+	void set_dim(int);						// to set the dimension of features vector
+    void set_num_gsm(int);					// to set the number of gaussian single models
+	int get_dim();							// to get the dimension
+	int get_num_gsm();						// to get the number of gaussian single models
 
-	int read_personal_data(string);
-	void self_adaption();
+	int read_personal_data(string);			// to read personal data, store in vector "personal_data"
+	void Self_adaption();					// MAP self adaption
 
-	double get_point(vector<vector<double>>&);
-	vector<vector<double>> get_data() {
+	double get_point(vector<vector<double>>&);	// read some features and compute the score
+	vector<vector<double>> get_data() {		// return personal data, for testing
 		return personal_data;	
 	} 
 
-	void set_model_id(string);
-	void save_to_file();
-	int recover_from_file(string);
+	void Score_normalization(string);		// to compute normal_var and normal_mean according to others' data
 	
-	void show_weight();
-	void show_mean();
-	void show_var();
-	void show_tol_num();
+	void set_model_id(string);				// to set model id
+	void save_to_file(string);					// save the model parameters to file
+	int recover_from_file(string);			// recover the model parameters from file
+	
+	void show_weight();						// show model weight, for testing
+	void show_mean();						// show model mean vector, for testing
+	void show_var();						// show model varience vector, for testing
+	void show_tol_num();					// show k-means the number of points in each cluster, for testing
 };
 
-//int UBM::num_GSM = 100;
-//int UBM::dim = 12;
-const double UBM::threshold = 0.0001;
-const double UBM::threshold_EM = 0.0005;
+const double UBM::threshold = 0.0001;		// k-means iteration threshold
+const double UBM::threshold_EM = 0.002;	// EM iteration threshold
 
 //============================ general function ============================//
 int UBM::recover_from_file(string filename) {
@@ -100,12 +96,9 @@ int UBM::recover_from_file(string filename) {
 		cerr << "File not exists!" << endl;
 		return 0;
 	}
-	int temp;
-	in >> temp;
-	dim = temp;
 
-	in >> temp;
-	num_GSM = temp;
+	in >> dim >> num_GSM; 
+	in >> normal_mean >> normal_var;
 
 	gsm.resize(num_GSM);
 	for(int i=0; i<num_GSM; i++) {
@@ -130,9 +123,10 @@ int UBM::recover_from_file(string filename) {
 	return 1;
 }
 
-void UBM::save_to_file() {
-	ofstream out(model_id);
-	out << dim << " " << num_GSM << '\n';	//save dim and num_GSM in the 1st line
+void UBM::save_to_file(string filename) {
+	ofstream out(filename);
+	out << dim << " " << num_GSM << '\n'
+		<< normal_mean << " " << normal_var << '\n';	//save dim, num_GSM, normal_mean, normal_var in two lines
 	
 	for(int i=0; i<num_GSM; i++)			//save weight
 		out << gsm[i].weight << '\n';
@@ -153,7 +147,7 @@ void UBM::save_to_file() {
 	out << endl;
 	out.close();
 	
-	cout << "The model has been saved in: " << model_id << endl;
+	cout << "The model has been saved in: " << filename << endl;
 	return;
 }
 
@@ -222,6 +216,7 @@ void UBM::show_tol_num() {
 int UBM::read_data(string filename) {
 	model_id = "model_"+filename;
 	ifstream in(filename);
+	data.clear();
 	data.reserve(num_data);	
 	if(!in) {
 		cerr << "Data file not exist!" << endl;
@@ -495,7 +490,7 @@ void UBM::EM() {
 	for(int i=0; i<num_GSM; i++) {
 		pr.push_back(t);
 	}
-	int cnt = 6000;
+	int cnt = 4000;
 	double change = INF;
 	int iter=1;
 
@@ -544,7 +539,7 @@ int UBM::read_personal_data(string filename) {
 	return 0;
 }
 
-void UBM::self_adaption() {
+void UBM::Self_adaption() {
 	vector<double> temp(personal_data.size(), 0);
 	for(int i=0; i<num_GSM; i++) {
 		personal_pr.push_back(temp);
@@ -591,6 +586,38 @@ void UBM::self_adaption() {
 }
 //============================== end self adaption ===========================//
 
+//============================== zero normalization ============================//
+void UBM::Score_normalization(string filename) {
+	read_data(filename);
+	vector<double> scores;
+	int step = 500;
+	normal_mean = normal_var = 0;
+
+	for(unsigned int i=0; i<data.size(); i+=step) {
+		double score = 0;
+		int cnt = 0;
+		for(unsigned int j=i; j<data.size() && j<i+step; j++) {
+			double temp = 0;
+			for(int k=0; k<num_GSM; k++) {
+				temp += cal_gsm(k,data[j])*gsm[k].weight;
+			}
+			score += temp;
+			cnt++;
+		}
+		score /= cnt;
+		normal_mean += score;
+		scores.push_back(score);
+	}
+	
+	normal_mean /= scores.size();
+	for(unsigned int i=0; i<scores.size(); i++) {
+		normal_var += (scores[i]-normal_mean)*(scores[i]-normal_mean);
+	}
+	normal_var /= scores.size();
+	normal_var = sqrt(normal_var);
+}
+//============================= end zero normalization =========================//
+
 //============================== get point ================================//
 double UBM::get_point(vector<vector<double>> &test) {
 	double ans = 0;
@@ -601,6 +628,8 @@ double UBM::get_point(vector<vector<double>> &test) {
 		}
 		ans += temp;
 	}
-	return ans/test.size(); 
+	ans /= (test.size()/500+1);
+	ans = fabs(ans-normal_mean)/normal_var;
+	return log(ans);
 };
 //============================ end get point ==============================//

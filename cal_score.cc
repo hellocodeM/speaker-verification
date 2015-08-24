@@ -9,7 +9,7 @@ int main() {
 	
 	vector<UBM> models(10);
 	for(int i=0; i<10; i++) {
-		string filename = "model_features/"+name[i];
+		string filename = "models/"+name[i];
 		string datadir = "features/"+name[i];
 		models[i].recover_from_file(filename);
 		models[i].read_personal_data(datadir);
@@ -20,9 +20,9 @@ int main() {
 
 	for(int i=0; i<10; i++) {
 		features = models[i].get_data();
-		double t = log(ubm.get_point(features));
+		double t = ubm.get_point(features);
 		for(int j=0; j<10; j++) {
-			double s = log(models[j].get_point(features));
+			double s = models[j].get_point(features);
 			ans[i][j] = s - t;
 		}
 	}

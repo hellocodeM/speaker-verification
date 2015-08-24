@@ -10,8 +10,9 @@ int main() {
 		gmm = ubm;
 		string filename = "features/"+name[i];
 		gmm.read_personal_data(filename);
-		gmm.self_adaption();
-		gmm.save_to_file();
+		gmm.Self_adaption();
+		gmm.Score_normalization("renwu_11.txt");
+		gmm.save_to_file("models/"+name[i]);
 	}
 	return 0;
 }

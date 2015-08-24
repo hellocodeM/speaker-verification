@@ -1,11 +1,12 @@
 #include "ubm.h"
 
 int main(int argc, char **argv) {
-	if(argc < 3) {
-		cerr << "You should input three parameters:" << endl;
+	if(argc < 4) {
+		cerr << "You should input four parameters:" << endl;
 		cerr << "#1 the file contains features of voice;" << endl;
 		cerr << "#2 the dimension of features;" << endl;
-		cerr << "#3 the number of Gaussian Single Model in GMM." << endl;
+		cerr << "#3 the number of Gaussian Single Model in GMM;" << endl;
+		cerr << "#4 the file contains many others' features used for score normalization." << endl;	
 		return 0;
 	}
 	UBM ubm;
@@ -22,8 +23,9 @@ int main(int argc, char **argv) {
 	ubm.Init();
 	ubm.Kmeans();
 	ubm.EM();
+	ubm.Score_normalization(string(argv[4]));
 	
-	ubm.save_to_file();
+	ubm.save_to_file("model_ubm.txt");
 	
 	return 0;
 }
