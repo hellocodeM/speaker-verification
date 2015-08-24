@@ -70,7 +70,7 @@ public:
 	void Self_adaption();					// MAP self adaption
 
 	double get_point(vector<vector<double>>&);	// read some features and compute the score
-	vector<vector<double>> get_data() {		// return personal data, for testing
+	vector<vector<double>> &get_data() {		// return personal data, for testing
 		return personal_data;	
 	} 
 
