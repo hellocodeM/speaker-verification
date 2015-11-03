@@ -2,15 +2,15 @@
 
 int main() {
 	UBM ubm;
-	ubm.recover_from_file("model_ubm.txt");
+	ubm.recover_from_file("yinku/yinku_ubm100.txt");
 	
-	vector<string> name{"3244.txt", "3546.txt", "4073.txt", "4122.txt", "4987.txt",
-						"4791.txt", "4799.txt", "5060.txt", "5536.txt", "6031.txt"};
-	
+	vector<string> name{"03a01Fa.txt", "03b01Fa.txt", "08a01Wa.txt", "08b01Fe.txt", "09a01Wb.txt",
+						"09b03Wb.txt", "10b01Aa.txt", "11a05Fc.txt", "12a01Nb.txt", "13a05Nb.txt"};
+//	vector<string> name{"03a01Fa.txt", "03a01Nc.txt", "03a01Wa.txt"};
 	vector<UBM> models(10);
 	for(int i=0; i<10; i++) {
-		string filename = "models/"+name[i];
-		string datadir = "features/"+name[i];
+		string filename = "yinku/models/"+name[i];
+		string datadir = "yinku/yinku_fea/"+name[i];
 		models[i].recover_from_file(filename);
 		models[i].read_personal_data(datadir);
 	}

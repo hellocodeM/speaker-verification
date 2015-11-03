@@ -6,7 +6,7 @@ int main(int argc, char **argv) {
 		cerr << "#1 the file contains features of voice;" << endl;
 		cerr << "#2 the dimension of features;" << endl;
 		cerr << "#3 the number of Gaussian Single Model in GMM;" << endl;
-		cerr << "#4 the file contains many others' features used for score normalization." << endl;	
+		cerr << "#4 the directory contains many others' features used for score normalization." << endl;	
 		return 0;
 	}
 	UBM ubm;
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	ubm.Init();
 	ubm.Kmeans();
 	ubm.EM();
-	ubm.Score_normalization(string(argv[4]));
+	ubm.ScoreNormalization(string(argv[4]));
 	
 	ubm.save_to_file("model_ubm.txt");
 	
