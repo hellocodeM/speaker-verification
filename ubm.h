@@ -512,10 +512,11 @@ void UBM::EM() {
 
 /* self adaption starts here */
 int UBM::read_personal_data(string filename) {
+	personal_data.clear();
 	ifstream in(filename);
 
 	if(!in) {
-		cerr << "Personal data file not exist!" << endl;
+		cerr << "Personal data file: " << filename << "  not exist!" << endl;
 		return 1;
 	}
 	model_id = "model_"+filename;
@@ -532,7 +533,7 @@ int UBM::read_personal_data(string filename) {
 		temp.clear();
 	}
 	in.close();	
-	cout << "Personal data read completed!" << endl;
+	cout << "Personal data file : " << filename << " read completed!" << endl;
 	return 0;
 }
 
@@ -582,38 +583,21 @@ void UBM::Self_adaption() {
 	show_mean();
 }
 
-/* zero normalization */
-/*
-void UBM::Score_normalization(string filename) {
-	read_data(filename);
-	vector<double> scores;
-	int step = 500;
-	normal_mean = normal_var = 0;
-
-	for(unsigned int i=0; i<data.size(); i+=step) {
-		double score = 0;
-		int cnt = 0;
-		for(unsigned int j=i; j<data.size() && j<i+step; j++) {
-			double temp = 0;
-			for(int k=0; k<num_GSM; k++) {
-				temp += cal_gsm(k,data[j])*gsm[k].weight;
-			}
-			score += temp;
-			cnt++;
+/* get point */
+double UBM::get_point(vector<vector<double>> &test) {
+	double ans = 0;
+	for(unsigned int i=0; i<test.size(); i++) {
+		double temp = 0;
+		for(int j=0; j<num_GSM; j++) {
+			temp += cal_gsm(j,test[i])*gsm[j].weight;
 		}
-		score /= cnt;
-		normal_mean += score;
-		scores.push_back(score);
+		ans += temp;
 	}
-	
-	normal_mean /= scores.size();
-	for(unsigned int i=0; i<scores.size(); i++) {
-		normal_var += (scores[i]-normal_mean)*(scores[i]-normal_mean);
-	}
-	normal_var /= scores.size();
-	normal_var = sqrt(normal_var);
-}*/
+	ans /= test.size();
+	return log(ans);
+}
 
+/* zero normalization */
 void UBM::ScoreNormalization(string path) {
 	vector<string> files;
 	DIR *dir = opendir(path.c_str());
@@ -627,18 +611,14 @@ void UBM::ScoreNormalization(string path) {
 	normal_mean = normal_var = 0;
 
 	for (auto filename : files) {
-		read_data(path+filename);
-		double score = 0;
-		for (unsigned int i=0; i<data.size(); i++) {
-			double temp = 0;
-			for (int k=0; k<num_GSM; k++) 
-				temp += cal_gsm(k, data[i]) * gsm[k].weight;
-			score += temp;
-		}
-		score /= data.size();
+		read_personal_data(path+filename);
+		double score = get_point(personal_data);
 		normal_mean += score;
 		scores.push_back(score);
 	}
+	
+	for (auto s : scores)
+		cout << s << endl;
 
 	normal_mean /= scores.size();
 	for (unsigned int i=0; i<scores.size(); i++) 
@@ -648,32 +628,9 @@ void UBM::ScoreNormalization(string path) {
 	normal_var = sqrt(normal_var);
 }
 
-/* get point */
-double UBM::get_point(vector<vector<double>> &test) {
-	double ans = 0;
-	for(unsigned int i=0; i<test.size(); i++) {
-		double temp = 0;
-		for(int j=0; j<num_GSM; j++) {
-			temp += cal_gsm(j,test[i])*gsm[j].weight;
-		}
-		ans += temp;
-	}
-//	ans /= (test.size()/500+1);
-	ans /= test.size();
-	return log(ans);
-}
-
+/* get normal point */
 double UBM::get_normal_point(vector<vector<double>> &test) {
-	double ans = 0;
-	for(unsigned int i=0; i<test.size(); i++) {
-		double temp = 0;
-		for(int j=0; j<num_GSM; j++) {
-			temp += cal_gsm(j,test[i])*gsm[j].weight;
-		}
-		ans += temp;
-	}
-//	ans /= (test.size()/500+1);
-	ans /= test.size();
-	ans = fabs(ans-normal_mean)/normal_var;
-	return log(ans);
+	double ans = get_point(test);
+	ans = (ans - normal_mean)/normal_var;
+	return ans;
 }
