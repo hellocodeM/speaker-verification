@@ -275,7 +275,7 @@ void UBM::Init() {
 	for(int k=1; k<num_GSM; k++) {
 		double maxSum = DBL_MAX;
 		int new_center_id = -1;
-		for(int j=0; j<3; j++) {			// 3 is decided by us
+		for(int j=0; j<3; j++) {			// 3 means redo times
 			double thres = (double)random((int)sum0);
 			double s = 0.0;
 			unsigned int i;
@@ -617,8 +617,8 @@ void UBM::ScoreNormalization(string path) {
 		scores.push_back(score);
 	}
 	
-	for (auto s : scores)
-		cout << s << endl;
+//	for (auto s : scores)
+//		cout << s << endl;
 
 	normal_mean /= scores.size();
 	for (unsigned int i=0; i<scores.size(); i++) 
